@@ -57,14 +57,6 @@ router.post('/upload', KoaBody({
     }
 }), async ctx => {
     // 验证是否登陆
-    console.log("ctx000", ctx);
-    let authorization = ctx.get('authorization');
-    console.log('authorization000', authorization);
-
-    let token = jwt.verify(authorization, 'kkb');
-    console.log('token000', token);
-
-
     let {
         attachment
     } = ctx.request.files;
@@ -75,7 +67,8 @@ router.post('/upload', KoaBody({
     let fileType = attachment.type;
     let fileSize = attachment.size;
 
-    const username = token.name;
+    let username = ctx.state.user.name;
+
     let userResult = await query("select * from `users` where `username`=?", [
         username
     ]);
@@ -105,28 +98,22 @@ router.get('/getPhotos', async ctx => {
     // 从数据库获取上传后的所有图片数据，通过json格式返回给客户端
     // todos
     let authorization = ctx.get('authorization');
-    console.log('authorization111*****', authorization, typeof authorization);
-  
-    if (authorization === "null" || authorization === null) {
-        ctx.body = "无权限获取"
-    } else {
-        let token = jwt.verify(authorization, secret);
-        console.log('token111', token);
-        const username = token.name;
-        let userResult = await query("select * from `users` where `username`=?", [
-            username
-        ]);
-        console.log("userResult", userResult);
-        let userId = userResult[0].id
+    let username = ctx.state.user.name;
+    console.log("userName", username);
+
+    let userResult = await query("select * from `users` where `username`=?", [
+        username
+    ]);
+    console.log("userResult", userResult);
+    let userId = userResult[0].id
 
 
-        let rs = await query(
-            // 作业中要求数据存储在 photos 表中，但是这里我就不去这么做，大家懂就可以了
-            "select * from `attachments` where `userId` = ?", [
-                userId
-            ])
-        ctx.body = rs;
-    }
+    let rs = await query(
+        // 作业中要求数据存储在 photos 表中，但是这里我就不去这么做，大家懂就可以了
+        "select * from `attachments` where `userId` = ?", [
+            userId
+        ])
+    ctx.body = rs;
 })
 
 router.post('/login', KoaBody(), async ctx => {
@@ -154,6 +141,7 @@ router.post('/login', KoaBody(), async ctx => {
             console.log("rs[0].id", rs[0].id);
             ctx.body = {
                 message: '登陆成功',
+                userName: username,
                 id: rs[0].id
             };
             console.log("ctx.body", ctx.body);

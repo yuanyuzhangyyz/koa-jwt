@@ -18,8 +18,9 @@ loginBtn.onclick = function() {
     xhr.onload = function() {
         console.log('xhr111', xhr.responseText);
         let authorization = xhr.getResponseHeader('Authorization');
+        const userName = JSON.parse(xhr.responseText).userName
         localStorage.setItem('authorization', authorization);
-        // localStorage.setItem('authorization',authorization);
+        localStorage.setItem('userName',userName);
         contentList.innerHTML=``;
         getPhotos();
     }
@@ -90,7 +91,8 @@ fileElement.onchange = function() {
     // fd.append('b', 2);
     fd.append('attachment', fileElement.files[0]);
     console.log("fileElement.files[0]",fileElement.files[0]);
-    xhr.setRequestHeader('Authorization',localStorage.getItem("authorization"));
+    xhr.setRequestHeader('Authorization','Bearer '+localStorage.getItem("authorization"));
+
     xhr.send(fd);
 }
 
@@ -111,7 +113,7 @@ function getPhotos() {
         } );
     }
     console.log("localStorage.getItem('authorization')",localStorage.getItem('authorization'));
-    xhr.setRequestHeader('Authorization', localStorage.getItem('authorization'));
+    xhr.setRequestHeader('Authorization', 'Bearer '+localStorage.getItem('authorization'));
 
     xhr.send();
 }
