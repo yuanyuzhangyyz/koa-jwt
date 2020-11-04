@@ -1,0 +1,26 @@
+{
+  "name": "homework",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app1.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "jsonwebtoken": "^8.5.1",
+    "koa": "^2.13.0",
+    "koa-body": "^4.2.0",
+    "koa-jwt": "^4.0.0",
+    "koa-router": "^9.4.0",
+    "koa-static-cache": "^5.1.4",
+    "mysql2": "^2.2.5",
+    "parse-filepath": "^1.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.6"
+  }
+}
