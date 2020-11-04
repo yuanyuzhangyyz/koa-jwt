@@ -13,23 +13,28 @@ const router = new KoaRouter();
 const connection = mysql2.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '',
+    password: 'yyz123asd',
     database: 'kkb'
 });
 
 app.use((ctx, next) => {
     return next().catch((err) => {
-      if(err.status === 401){
-         ctx.status = 401;
-          ctx.body = 'Protected resource, use Authorization header to get access\n';
-       }else{
-           throw err;
-       }
+        if (err.status === 401) {
+            ctx.status = 401;
+            ctx.body = 'Protected resource, use Authorization header to get access\n';
+        } else {
+            throw err;
+        }
     })
-  })
-  
+})
+
 const secret = 'kkb';
-app.use(jwtKoa({ secret , passthrough:true }).unless({ path: [/^\/(public|static|login)/] }));
+app.use(jwtKoa({
+    secret,
+    passthrough: true
+}).unless({
+    path: [/^\/(public|static|login)/]
+}));
 
 
 
@@ -71,7 +76,7 @@ router.post('/upload', KoaBody({
     let fileSize = attachment.size;
 
     const username = token.name;
-    let userResult= await query("select * from `users` where `username`=?", [
+    let userResult = await query("select * from `users` where `username`=?", [
         username
     ]);
     let userId = userResult[0].id
@@ -82,7 +87,7 @@ router.post('/upload', KoaBody({
     let rs = await query(
         "insert into `attachments` (`filename`, `type`, `size`,`userId`) values (?, ?, ?,?)",
         [
-            filename, fileType, fileSize,userId
+            filename, fileType, fileSize, userId
         ]
     );
 
@@ -100,27 +105,28 @@ router.get('/getPhotos', async ctx => {
     // 从数据库获取上传后的所有图片数据，通过json格式返回给客户端
     // todos
     let authorization = ctx.get('authorization');
-    console.log('authorization111', authorization);
+    console.log('authorization111*****', authorization, typeof authorization);
+  
+    if (authorization === "null" || authorization === null) {
+        ctx.body = "无权限获取"
+    } else {
+        let token = jwt.verify(authorization, secret);
+        console.log('token111', token);
+        const username = token.name;
+        let userResult = await query("select * from `users` where `username`=?", [
+            username
+        ]);
+        console.log("userResult", userResult);
+        let userId = userResult[0].id
 
-    let token = jwt.verify(authorization, 'kkb');
-    console.log('token111', token);
 
-    const username = token.name;
-    let userResult= await query("select * from `users` where `username`=?", [
-        username
-    ]);
-    console.log("userResult",userResult);
-    let userId = userResult[0].id
-
-
-     let rs = await query(
-         // 作业中要求数据存储在 photos 表中，但是这里我就不去这么做，大家懂就可以了
-        "select * from `attachments` where `userId` = ?",[
-        userId
-    ])
-        
-
-    ctx.body = rs;
+        let rs = await query(
+            // 作业中要求数据存储在 photos 表中，但是这里我就不去这么做，大家懂就可以了
+            "select * from `attachments` where `userId` = ?", [
+                userId
+            ])
+        ctx.body = rs;
+    }
 })
 
 router.post('/login', KoaBody(), async ctx => {
@@ -140,14 +146,16 @@ router.post('/login', KoaBody(), async ctx => {
         if (rs.length !== 0) {
             const token = jwt.sign({
                 name: username
-            }, 'kkb', {
+            }, secret, {
                 expiresIn: '2h'
             });
 
             ctx.set('authorization', token);
-            console.log("rs[0].id",rs[0].id);
-            ctx.body = {message:'登陆成功',
-                        id:rs[0].id};
+            console.log("rs[0].id", rs[0].id);
+            ctx.body = {
+                message: '登陆成功',
+                id: rs[0].id
+            };
             console.log("ctx.body", ctx.body);
         } else {
             ctx.response.status = 401;
@@ -156,7 +164,7 @@ router.post('/login', KoaBody(), async ctx => {
 
     } catch (err) {
         // will only respond with JSON
-        console.log("err",err);
+        console.log("err", err);
         ctx.status = err.statusCode || err.status || 500;
         ctx.body = {
             message: err.message
@@ -164,23 +172,23 @@ router.post('/login', KoaBody(), async ctx => {
     }
 
 
-    
+
 });
 
 app.use(router.routes());
 
-app.use(function(ctx, next){
+app.use(function (ctx, next) {
     return next().catch((err) => {
-        console.log("err222",err);
-      if (401 == err.status) {
-        ctx.status = 401;
-        ctx.body = 'Protected resource, use Authorization header to get access\n';
-      } else {
+        console.log("err222", err);
+        if (401 == err.status) {
+            ctx.status = 401;
+            ctx.body = 'Protected resource, use Authorization header to get access\n';
+        } else {
 
-        throw err;
-      }
+            throw err;
+        }
     });
-  });
+});
 
 app.listen(8888, () => {
     console.log(`服务启动成功 http://localhost:8888`);
@@ -201,5 +209,3 @@ function query(sql, data) {
         );
     })
 }
-
-
